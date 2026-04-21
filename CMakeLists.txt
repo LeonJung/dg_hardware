@@ -20,8 +20,10 @@ find_package(delto_tcp_comm REQUIRED)
 # Select architecture-specific library
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
   set(DELTO_HELPER_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/aarch64)
+  set(DELTO_HELPER_LIB_NAME libdelto_gripper_helper_arm64.so)
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
   set(DELTO_HELPER_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/x86_64)
+  set(DELTO_HELPER_LIB_NAME libdelto_gripper_helper_amd64.so)
 else()
   message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
@@ -29,7 +31,7 @@ endif()
 # Import delto_gripper_helper library (shared across all drivers)
 add_library(delto_gripper_helper SHARED IMPORTED)
 set_target_properties(delto_gripper_helper PROPERTIES
-  IMPORTED_LOCATION ${DELTO_HELPER_LIB_DIR}/libdelto_gripper_helper.so
+  IMPORTED_LOCATION ${DELTO_HELPER_LIB_DIR}/${DELTO_HELPER_LIB_NAME}
 )
 
 # Build the hardware interface library
