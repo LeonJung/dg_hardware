@@ -783,9 +783,16 @@ SystemInterface::return_type SystemInterface::write(
   }
 
   try {
-    filter_effort_commands = delto_gripper_helper::CurrentControl(
-        effort_commands_.size(), current_mA, effort_commands_,
-        current_limit_flag_, current_integral_);
+    if (model_ == MODEL_DG5F_S_L || model_ == MODEL_DG5F_S_R ||
+        model_ == MODEL_DG5F_S15_L || model_ == MODEL_DG5F_S15_R) {
+      filter_effort_commands = delto_gripper_helper::CurrentControlSModel(
+          effort_commands_.size(), current_mA, effort_commands_,
+          current_limit_flag_, current_integral_);
+    } else {
+      filter_effort_commands = delto_gripper_helper::CurrentControl(
+          effort_commands_.size(), current_mA, effort_commands_,
+          current_limit_flag_, current_integral_);
+    }
 
     duty = delto_gripper_helper::ConvertDuty(
         effort_commands_.size(), filter_effort_commands);
