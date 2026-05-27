@@ -472,6 +472,18 @@ SystemInterface::on_deactivate(
   }
 
   if (delto_client_) {
+    // Release motor torque before disconnecting. The DG5F firmware keeps
+    // applying the last PWM duty it received, so without this the motors stay
+    // energized and the fingers curl up after the node/controller is stopped.
+    // Sending zero duty makes the hand go limp on shutdown.
+    try {
+      std::vector<int> zero_duty(effort_commands_.size(), 0);
+      std::lock_guard<std::mutex> lock(comm_mutex_);
+      delto_client_->SendDuty(zero_duty);
+    } catch (const std::exception& e) {
+      RCLCPP_WARN(rclcpp::get_logger("SystemInterface"),
+                  "Failed to zero motor duty on deactivate: %s", e.what());
+    }
     delto_client_->Disconnect();
   }
   is_connected_.store(false);
@@ -604,6 +616,16 @@ SystemInterface::on_shutdown(
   }
 
   if (delto_client_) {
+    // Release motor torque before disconnecting (see on_deactivate): zero duty
+    // so the hand goes limp instead of holding the last command and curling.
+    try {
+      std::vector<int> zero_duty(effort_commands_.size(), 0);
+      std::lock_guard<std::mutex> lock(comm_mutex_);
+      delto_client_->SendDuty(zero_duty);
+    } catch (const std::exception& e) {
+      RCLCPP_WARN(rclcpp::get_logger("SystemInterface"),
+                  "Failed to zero motor duty on shutdown: %s", e.what());
+    }
     delto_client_->Disconnect();
   }
   is_connected_.store(false);
